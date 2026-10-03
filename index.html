@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>信息源导航</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f0f13;
+  --card-bg: #1a1a24;
+  --card-border: #2a2a3a;
+  --text-primary: #e8e8f0;
+  --text-secondary: #8888a0;
+  --accent-1: #6c5ce7;
+  --accent-2: #00b894;
+  --accent-3: #e17055;
+  --tab-inactive: #2a2a3a;
+  --radius: 14px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.header {
+  padding: 20px 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.header p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 6px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+  line-height: 1.3;
+  background: var(--tab-inactive);
+  color: var(--text-secondary);
+}
+
+.tab.active-0 { background: var(--accent-1); color: #fff; }
+.tab.active-1 { background: var(--accent-2); color: #fff; }
+.tab.active-2 { background: var(--accent-3); color: #fff; }
+
+.tab-icon {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.content {
+  padding: 4px 16px 40px;
+}
+
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn 0.25s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card:active {
+  transform: scale(0.98);
+}
+
+.card:hover {
+  border-color: #4a4a6a;
+}
+
+.card-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.panel-0 .card-num { background: rgba(108,92,231,0.15); color: var(--accent-1); }
+.panel-1 .card-num { background: rgba(0,184,148,0.15); color: var(--accent-2); }
+.panel-2 .card-num { background: rgba(225,112,85,0.15); color: var(--accent-3); }
+
+.card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-title .arrow {
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.card:hover .card-title .arrow { opacity: 1; }
+
+.card-desc {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-secondary);
+}
+
+.tag.free {
+  background: rgba(0,184,148,0.12);
+  color: #00b894;
+}
+
+.tag.freemium {
+  background: rgba(253,203,110,0.12);
+  color: #fdcb6e;
+}
+
+.search-bar {
+  padding: 0 20px 12px;
+  position: sticky;
+  top: 90px;
+  z-index: 99;
+  background: var(--bg);
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-bar input::placeholder { color: var(--text-secondary); }
+.search-bar input:focus { border-color: var(--accent-1); }
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>信息源导航</h1>
+  <p>跳出算法，俯瞰全局</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active-0" onclick="switchTab(0)">
+    <span class="tab-icon">📊</span>数据工具
+  </button>
+  <button class="tab" onclick="switchTab(1)">
+    <span class="tab-icon">🔥</span>热点聚合
+  </button>
+  <button class="tab" onclick="switchTab(2)">
+    <span class="tab-icon">📑</span>行业研报
+  </button>
+</div>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="搜索平台名称..." oninput="filterCards()">
+</div>
+
+<div class="content">
+
+  <!-- Panel 0: 数据工具 -->
+  <div class="panel panel-0 active" id="panel-0">
+    <a class="card" href="https://index.toutiao.com/" target="_blank" rel="noopener">
+      <div class="card-num">01</div>
+      <div class="card-body">
+        <div class="card-title">抖音指数 <span class="arrow">↗</span></div>
+        <div class="card-desc">抖音官方数据工具，关键词搜索指数、热搜榜、人群画像、品牌榜，支持多端热词分析</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">搜索趋势</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://index.baidu.com/" target="_blank" rel="noopener">
+      <div class="card-num">02</div>
+      <div class="card-body">
+        <div class="card-title">百度指数 <span class="arrow">↗</span></div>
+        <div class="card-desc">基于百度搜索量的趋势分析，搜索人群画像（年龄/性别/地域）、关联搜索词分析</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">搜索趋势</span></div>
+      </div>
+    </a>
+    <a class="card" href="javascript:void(0)" onclick="alert('请在微信内搜索「微信指数」小程序使用')">
+      <div class="card-num">03</div>
+      <div class="card-body">
+        <div class="card-title">微信指数 <span class="arrow">↗</span></div>
+        <div class="card-desc">微信生态内关键词搜索频率追踪，覆盖朋友圈、公众号、搜一搜，支持7/30/90日区间</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">微信生态</span></div>
+      </div>
+    </a>
+    <a class="card" href="javascript:void(0)" onclick="alert('请在抖音内搜索「热点宝」使用')">
+      <div class="card-num">04</div>
+      <div class="card-body">
+        <div class="card-title">抖音热点宝 <span class="arrow">↗</span></div>
+        <div class="card-desc">分钟级热点榜单，热点全生命周期数据解读，官方活动日历，可按类别和城市筛选</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">热点追踪</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://e.kuaishou.com/" target="_blank" rel="noopener">
+      <div class="card-num">05</div>
+      <div class="card-body">
+        <div class="card-title">快手磁力引擎 <span class="arrow">↗</span></div>
+        <div class="card-desc">快手数据洞察平台，用户+内容+电商多维数据报表，投前投后洞察</div>
+        <div class="card-meta"><span class="tag free">基础免费</span><span class="tag">快手生态</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://newrank.cn/" target="_blank" rel="noopener">
+      <div class="card-num">06</div>
+      <div class="card-body">
+        <div class="card-title">新榜 <span class="arrow">↗</span></div>
+        <div class="card-desc">新媒体数据平台，跨平台账号影响力榜单，覆盖公众号/小红书/抖音/视频号</div>
+        <div class="card-meta"><span class="tag freemium">免费+付费</span><span class="tag">账号排行</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.chanmama.com/" target="_blank" rel="noopener">
+      <div class="card-num">07</div>
+      <div class="card-body">
+        <div class="card-title">蝉妈妈 <span class="arrow">↗</span></div>
+        <div class="card-desc">抖音直播电商数据工具，选品分析、达人分析、竞品监控、AI辅助拆视频</div>
+        <div class="card-meta"><span class="tag freemium">免费+付费</span><span class="tag">电商数据</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://feigua.cn/" target="_blank" rel="noopener">
+      <div class="card-num">08</div>
+      <div class="card-body">
+        <div class="card-title">飞瓜数据 <span class="arrow">↗</span></div>
+        <div class="card-desc">短视频+直播电商数据平台，覆盖抖音/快手/B站，销量与营销声量分析</div>
+        <div class="card-meta"><span class="tag freemium">免费+付费</span><span class="tag">电商数据</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.questmobile.cn/" target="_blank" rel="noopener">
+      <div class="card-num">09</div>
+      <div class="card-body">
+        <div class="card-title">QuestMobile <span class="arrow">↗</span></div>
+        <div class="card-desc">移动互联网商业智能平台，APP月活、用户行为、广告市场数据，半年度大报告</div>
+        <div class="card-meta"><span class="tag freemium">部分免费</span><span class="tag">行业数据</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://index.iresearch.com.cn/" target="_blank" rel="noopener">
+      <div class="card-num">10</div>
+      <div class="card-body">
+        <div class="card-title">艾瑞指数 <span class="arrow">↗</span></div>
+        <div class="card-desc">互联网用户行为洞察，AI应用指数、移动APP指数、网络广告指数、行业研究报告</div>
+        <div class="card-meta"><span class="tag freemium">部分免费</span><span class="tag">行业数据</span></div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Panel 1: 热点聚合 -->
+  <div class="panel panel-1" id="panel-1">
+    <a class="card" href="https://tophub.today/" target="_blank" rel="noopener">
+      <div class="card-num">01</div>
+      <div class="card-body">
+        <div class="card-title">今日热榜 <span class="arrow">↗</span></div>
+        <div class="card-desc">聚合微信/知乎/微博/抖音/GitHub等数十个平台热榜，月活超500万</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">全平台聚合</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.goodssoft.com/" target="_blank" rel="noopener">
+      <div class="card-num">02</div>
+      <div class="card-body">
+        <div class="card-title">今日热榜 (goodssoft) <span class="arrow">↗</span></div>
+        <div class="card-desc">聚合微博/知乎/百度/抖音/B站/36氪等热榜，一站式全网热搜浏览</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">全平台聚合</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://hotboard.lilu.org.cn/" target="_blank" rel="noopener">
+      <div class="card-num">03</div>
+      <div class="card-body">
+        <div class="card-title">全网热点 <span class="arrow">↗</span></div>
+        <div class="card-desc">跨领域实时热榜聚合，覆盖知乎/抖音/百度/今日头条/腾讯新闻</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">实时热榜</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.soureci.com/" target="_blank" rel="noopener">
+      <div class="card-num">04</div>
+      <div class="card-body">
+        <div class="card-title">搜热词 <span class="arrow">↗</span></div>
+        <div class="card-desc">全网搜索热词榜，按平台/行业/人群/性别筛选，含短期趋势走势图</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">热词追踪</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://36kr.com/" target="_blank" rel="noopener">
+      <div class="card-num">05</div>
+      <div class="card-body">
+        <div class="card-title">36氪 <span class="arrow">↗</span></div>
+        <div class="card-desc">商业科技资讯，热榜覆盖AI/科技/创投/出海，深度报道+快讯结合</div>
+        <div class="card-meta"><span class="tag freemium">部分付费</span><span class="tag">科技商业</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://okjike.com/" target="_blank" rel="noopener">
+      <div class="card-num">06</div>
+      <div class="card-body">
+        <div class="card-title">即刻 <span class="arrow">↗</span></div>
+        <div class="card-desc">兴趣社区，科技/创业/AI圈子的真实讨论热度，适合感受"圈内情绪"</div>
+        <div class="card-meta"><span class="tag freemium">免费+付费</span><span class="tag">兴趣社区</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.zhihu.com/billboard" target="_blank" rel="noopener">
+      <div class="card-num">07</div>
+      <div class="card-body">
+        <div class="card-title">知乎热榜 <span class="arrow">↗</span></div>
+        <div class="card-desc">全网最受关注的热议话题，覆盖社会/科技/人文，有深度讨论和多元观点</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">深度讨论</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.tmtpost.com/" target="_blank" rel="noopener">
+      <div class="card-num">08</div>
+      <div class="card-body">
+        <div class="card-title">钛媒体 <span class="arrow">↗</span></div>
+        <div class="card-desc">科技商业媒体，行业报告栏目+精选投行报告+趋势分析</div>
+        <div class="card-meta"><span class="tag freemium">部分付费</span><span class="tag">科技商业</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.199it.com/" target="_blank" rel="noopener">
+      <div class="card-num">09</div>
+      <div class="card-body">
+        <div class="card-title">199IT <span class="arrow">↗</span></div>
+        <div class="card-desc">互联网数据资讯中心，聚合各行业研究报告、数据图表和趋势分析</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">数据中心</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://s.weibo.com/top/summary" target="_blank" rel="noopener">
+      <div class="card-num">10</div>
+      <div class="card-body">
+        <div class="card-title">微博热搜 <span class="arrow">↗</span></div>
+        <div class="card-desc">最实时的全民话题风向标，反映大众情绪和舆论焦点，分钟级更新</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">舆论风向</span></div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Panel 2: 行业研报 -->
+  <div class="panel panel-2" id="panel-2">
+    <a class="card" href="https://www.questmobile.cn/" target="_blank" rel="noopener">
+      <div class="card-num">01</div>
+      <div class="card-body">
+        <div class="card-title">QuestMobile 研报 <span class="arrow">↗</span></div>
+        <div class="card-desc">移动互联网半年大报告、智能手机市场、广告营销趋势，行业标杆级报告</div>
+        <div class="card-meta"><span class="tag freemium">部分免费</span><span class="tag">移动互联网</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.iresearch.com.cn/" target="_blank" rel="noopener">
+      <div class="card-num">02</div>
+      <div class="card-body">
+        <div class="card-title">艾瑞咨询 <span class="arrow">↗</span></div>
+        <div class="card-desc">覆盖大模型/AI/医疗/消费等方向的深度行业研究报告，国内头部研究机构</div>
+        <div class="card-meta"><span class="tag freemium">部分免费</span><span class="tag">综合研究</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://a16z.com/category/special-reports/" target="_blank" rel="noopener">
+      <div class="card-num">03</div>
+      <div class="card-body">
+        <div class="card-title">a16z <span class="arrow">↗</span></div>
+        <div class="card-desc">顶级风投，Big Ideas、State of Markets报告，侧重AI/科技/加密/消费趋势</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">全球视角</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.hongshan.com/" target="_blank" rel="noopener">
+      <div class="card-num">04</div>
+      <div class="card-body">
+        <div class="card-title">红杉中国 HongShan <span class="arrow">↗</span></div>
+        <div class="card-desc">中国科技创新与早期创业生态洞察，AI时代营销、科技从业者调研</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">创投洞察</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.fxbaogao.com/" target="_blank" rel="noopener">
+      <div class="card-num">05</div>
+      <div class="card-body">
+        <div class="card-title">发现报告 <span class="arrow">↗</span></div>
+        <div class="card-desc">专业研报聚合平台，海量券商研报+行业报告，覆盖新赛道/AI/精密制造</div>
+        <div class="card-meta"><span class="tag freemium">部分免费</span><span class="tag">研报聚合</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://robo.datayes.com/" target="_blank" rel="noopener">
+      <div class="card-num">06</div>
+      <div class="card-body">
+        <div class="card-title">萝卜投研 <span class="arrow">↗</span></div>
+        <div class="card-desc">智慧投研工具，全市场券商/基金研报、智能分析、深度关系图谱</div>
+        <div class="card-meta"><span class="tag freemium">免费+付费</span><span class="tag">投研工具</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.qianzhan.com/" target="_blank" rel="noopener">
+      <div class="card-num">07</div>
+      <div class="card-body">
+        <div class="card-title">前瞻产业研究院 <span class="arrow">↗</span></div>
+        <div class="card-desc">产业规划与研究报告，覆盖新能源/云计算/智能制造/机器人，5万+份报告</div>
+        <div class="card-meta"><span class="tag freemium">部分免费</span><span class="tag">产业研究</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.itjuzi.com/" target="_blank" rel="noopener">
+      <div class="card-num">08</div>
+      <div class="card-body">
+        <div class="card-title">IT桔子 <span class="arrow">↗</span></div>
+        <div class="card-desc">创投数据平台，投融资月报、独角兽列表、创业公司数据库，覆盖机器人/VR/元宇宙</div>
+        <div class="card-meta"><span class="tag freemium">免费+付费</span><span class="tag">创投数据</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.qianzhan.com/analyst/" target="_blank" rel="noopener">
+      <div class="card-num">09</div>
+      <div class="card-body">
+        <div class="card-title">前瞻经济学人 <span class="arrow">↗</span></div>
+        <div class="card-desc">前瞻旗下产业分析平台，产业周报+白皮书+市场分析报告</div>
+        <div class="card-meta"><span class="tag freemium">部分免费</span><span class="tag">产业分析</span></div>
+      </div>
+    </a>
+    <a class="card" href="https://www.cnnic.cn/" target="_blank" rel="noopener">
+      <div class="card-num">10</div>
+      <div class="card-body">
+        <div class="card-title">CNNIC 报告 <span class="arrow">↗</span></div>
+        <div class="card-desc">中国互联网络信息中心，定期发布《中国互联网络发展状况统计报告》，最权威的全网用户基础数据</div>
+        <div class="card-meta"><span class="tag free">免费</span><span class="tag">权威统计</span></div>
+      </div>
+    </a>
+  </div>
+
+</div>
+
+<script>
+let currentTab = 0;
+
+function switchTab(idx) {
+  currentTab = idx;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.className = 'tab' + (i === idx ? ' active-' + idx : '');
+  });
+  document.querySelectorAll('.panel').forEach((p, i) => {
+    p.classList.toggle('active', i === idx);
+  });
+  document.getElementById('searchInput').value = '';
+  filterCards();
+}
+
+function filterCards() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const panel = document.getElementById('panel-' + currentTab);
+  const cards = panel.querySelectorAll('.card');
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const title = card.querySelector('.card-title').textContent.toLowerCase();
+    const desc = card.querySelector('.card-desc').textContent.toLowerCase();
+    const match = !query || title.includes(query) || desc.includes(query);
+    card.style.display = match ? '' : 'none';
+    if (match) visibleCount++;
+  });
+
+  let empty = panel.querySelector('.empty-state');
+  if (visibleCount === 0) {
+    if (!empty) {
+      empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = '没有匹配的平台';
+      panel.appendChild(empty);
+    }
+  } else if (empty) {
+    empty.remove();
+  }
+}
+</script>
+
+</body>
+</html>
